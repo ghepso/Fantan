@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Fantan Tool Tam Hoàn Thiện</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 20px; }
+table { border-collapse: collapse; margin-bottom: 20px; }
+td { width: 30px; height: 30px; text-align: center; vertical-align: middle; border: 1px solid #999; font-size: 16px; }
+.correct { background-color: lightblue; }
+.wrong { background-color: yellow; }
+button { width: 60px; height: 40px; margin: 5px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.btn1 { background-color: #1E90FF; }  
+.btn2 { background-color: #32CD32; }  
+.btn3 { background-color: #FF4500; }  
+.btn4 { background-color: #8A2BE2; }  
+.btnDel { background-color: #FF8C00; } 
+.btnClear { background-color: #DC143C; }
+.prediction { font-weight: bold; margin-bottom: 10px; }
+.red { color: red; }
+.green { color: green; }
+.yellow { color: gold; }
+.totalMoney { font-weight: bold; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<div>
+  <button class="btn1" onclick="addNumber(1)">1</button>
+  <button class="btn2" onclick="addNumber(2)">2</button>
+  <button class="btn3" onclick="addNumber(3)">3</button>
+  <button class="btn4" onclick="addNumber(4)">4</button>
+  <button class="btnDel" onclick="deleteLast()">Xóa 1</button>
+  <button class="btnClear" onclick="clearAll()">Xóa bàn</button>
+</div>
+
+<select id="ppSelect" onchange="setPP()">
+  <option value="">-- Chọn PP --</option>
+  <option value="BPB">BPB</option>
+  <option value="PPB">PPB</option>
+  <option value="BPBBPP">BPBBPP</option>
+  <option value="BPPBBBPPPP">BPPBBBPPPP</option>
+</select>
+
+<div class="prediction" id="predictionLine"></div>
+
+<h3>Bảng chính</h3>
+<table id="mainTable"></table>
+
+<h3>Bảng Tài/Xỉu</h3>
+<table id="txTable"></table>
+<div class="totalMoney">Tổng tiền: <span id="totalTX">0</span></div>
+
+<h3>Bảng Chẵn/Lẻ</h3>
+<table id="clTable"></table>
+<div class="totalMoney">Tổng tiền: <span id="totalCL">0</span></div>
+
+<h3>Bảng Góc</h3>
+<table id="gocTable"></table>
+<div class="totalMoney">Tổng tiền: <span id="totalGOC">0</span></div>
+
+<script>
+const rows=3, cols=100;
+const mainTable=document.getElementById('mainTable');
+const txTable=document.getElementById('txTable');
+const clTable=document.getElementById('clTable');
+const gocTable=document.getElementById('gocTable');
+const predictionLine=document.getElementById('predictionLine');
+const totalTX=document.getElementById('totalTX');
+const totalCL=document.getElementById('totalCL');
+const totalGOC=document.getElementById('totalGOC');
+
+let ppString="", TX_PP=[], CL_PP=[], GOC_PP=[];
+let currentIndex=0, inputHistory=[];
+
+function createTable(table){
+  table.innerHTML="";
+  for(let r=0;r<rows;r++){
+    let tr=document.createElement('tr');
+    for(let c=0;c<cols;c++){ tr.appendChild(document.createElement('td')); }
+    table.appendChild(tr);
+  }
+  // Dòng trống
+  let trBlank=document.createElement('tr');
+  for(let c=0;c<cols;c++){ let td=document.createElement('td'); td.style.border='none'; trBlank.appendChild(td);}
+  table.appendChild(trBlank);
+  // Dòng tiền
+  let trMoney=document.createElement('tr');
+  for(let c=0;c<cols;c++){ trMoney.appendChild(document.createElement('td')); }
+  table.appendChild(trMoney);
+}
+
+[mainTable,txTable,clTable,gocTable].forEach(createTable);
+
+function setPP(){
+  const pp=document.getElementById('ppSelect').value;
+  ppString=pp; inputHistory=[]; currentIndex=0; clearTables();
+  switch(pp){
+    case "BPB": TX_PP=['T','X','T']; CL_PP=['C','L','C']; GOC_PP=['23','14','23']; break;
+    case "PPB": TX_PP=['X','X','T']; CL_PP=['L','L','C']; GOC_PP=['14','14','23']; break;
+    case "BPBBPP": TX_PP=['T','X','T','T','X','X']; CL_PP=['C','L','C','C','L','L']; GOC_PP=['23','14','23','23','14','14']; break;
+    case "BPPBBBPPPP": TX_PP=['T','X','X','T','T','T','X','X','X','X']; CL_PP=['C','L','L','C','C','C','L','L','L','L']; GOC_PP=['23','14','14','23','23','23','14','14','14','14']; break;
+    default: TX_PP=[]; CL_PP=[]; GOC_PP=[];
+  }
+  updatePrediction();
+}
+
+function addNumber(num){
+  if(currentIndex>=rows*cols) return;
+  const row=currentIndex%rows;
+  const col=Math.floor(currentIndex/rows);
+  mainTable.rows[row].cells[col].textContent=num;
+  inputHistory.push(num);
+  updateRef(row,col,num);
+  currentIndex++;
+  updatePrediction();
+  updateMoney();
+}
+
+function updateRef(row,col,num){
+  const idx=currentIndex%TX_PP.length;
+  const tx=matchTX(num,TX_PP[idx])?'✓':'✗';
+  txTable.rows[row].cells[col].textContent=tx;
+  txTable.rows[row].cells[col].className=(tx==='✓')?'correct':'wrong';
+  const cl=matchCL(num,CL_PP[idx])?'✓':'✗';
+  clTable.rows[row].cells[col].textContent=cl;
+  clTable.rows[row].cells[col].className=(cl==='✓')?'correct':'wrong';
+  const goc=matchGOC(num,GOC_PP[idx])?'✓':'✗';
+  gocTable.rows[row].cells[col].textContent=goc;
+  gocTable.rows[row].cells[col].className=(goc==='✓')?'correct':'wrong';
+}
+
+function matchTX(num,char){ return (char==='T')?num>=3:(char==='X')?num<=2:false; }
+function matchCL(num,char){ return (char==='C')?num%2===0:(char==='L')?num%2!==0:false; }
+function matchGOC(num,char){ return (char==='14')?num===1||num===4:(char==='23')?num===2||num===3:false; }
+
+function updatePrediction(){
+  if(TX_PP.length===0 || inputHistory.length===0){predictionLine.innerHTML=''; return;}
+  const idx=currentIndex%TX_PP.length;
+  const len=inputHistory.length;
+  let txCorrect=0, clCorrect=0, gocCorrect=0;
+  for(let i=0;i<inputHistory.length;i++){
+    const val=inputHistory[i], txIdx=i%TX_PP.length;
+    if(matchTX(val,TX_PP[txIdx])) txCorrect++;
+    if(matchCL(val,CL_PP[txIdx])) clCorrect++;
+    if(matchGOC(val,GOC_PP[txIdx])) gocCorrect++;
+  }
+  predictionLine.innerHTML=
+    `<span class="${getColor(TX_PP[idx])}">${TX_PP[idx]} ${Math.round(txCorrect/len*100)}%</span> | `+
+    `<span class="${getColor(CL_PP[idx])}">${CL_PP[idx]} ${Math.round(clCorrect/len*100)}%</span> | `+
+    `<span class="${getColor(GOC_PP[idx])}">${GOC_PP[idx]} ${Math.round(gocCorrect/len*100)}%</span>`;
+}
+
+function getColor(char){
+  if(char==='T'||char==='C') return 'red';
+  else if(char==='X'||char==='L'||char==='14') return 'green';
+  else if(char==='23') return 'yellow';
+  else return '';
+}
+
+function deleteLast(){ 
+  if(currentIndex<=0) return; 
+  currentIndex--; 
+  const row=currentIndex%rows, col=Math.floor(currentIndex/rows); 
+  mainTable.rows[row].cells[col].textContent=''; 
+  [txTable,clTable,gocTable].forEach(table=>{ const td=table.rows[row].cells[col]; td.textContent=''; td.className='';});
+  inputHistory.pop(); 
+  updatePrediction(); 
+  updateMoney();
+}
+
+function clearAll(){ currentIndex=0; inputHistory=[]; clearTables(); updatePrediction(); updateMoney();}
+
+function clearTables(){ [mainTable,txTable,clTable,gocTable].forEach(table=>{ table.querySelectorAll('tr').forEach(tr=>{ tr.querySelectorAll('td').forEach(td=>td.textContent=''); }); });}
+
+function updateMoney(){
+  const tables=[
+    {table:txTable,total:totalTX},
+    {table:clTable,total:totalCL},
+    {table:gocTable,total:totalGOC}
+  ];
+  tables.forEach(obj=>{
+    const table=obj.table;
+    const moneyRow=table.rows[rows+1];
+    let total=0;
+    for(let c=0;c<cols;c++){
+      const prev=[table.rows[0].cells[c].textContent, table.rows[1].cells[c].textContent, table.rows[2].cells[c].textContent];
+      if(prev.includes('')){ moneyRow.cells[c].textContent=''; continue; } // chưa đủ dữ liệu
+      if(prev.every(x=>'✓'===x) || prev.every(x=>'✗'===x)){ moneyRow.cells[c].textContent=''; continue; }
+      const countX=prev.filter(x=>'✓'===x).length;
+      const countV=prev.filter(x=>'✗'===x).length;
+      const target=(countX<countV)?'✓':'✗';
+      moneyRow.cells[c].textContent=prev.includes(target)?1:-7;
+      total+=parseInt(moneyRow.cells[c].textContent)||0;
+    }
+    obj.total.textContent=total;
+  });
+}
+</script>
+
+</body>
+</html>
