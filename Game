@@ -1,202 +1,462 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<title>Fantan Tool Tam Hoàn Thiện</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=10.0,minimum-scale=0.5,user-scalable=yes">
+<title>Sohocthanbi - Pro 6 Game 2026</title>
 <style>
-body { font-family: Arial, sans-serif; padding: 20px; }
-table { border-collapse: collapse; margin-bottom: 20px; }
-td { width: 30px; height: 30px; text-align: center; vertical-align: middle; border: 1px solid #999; font-size: 16px; }
-.correct { background-color: lightblue; }
-.wrong { background-color: yellow; }
-button { width: 60px; height: 40px; margin: 5px; font-size: 16px; font-weight: bold; color: white; border: none; border-radius: 5px; cursor: pointer; }
-.btn1 { background-color: #1E90FF; }  
-.btn2 { background-color: #32CD32; }  
-.btn3 { background-color: #FF4500; }  
-.btn4 { background-color: #8A2BE2; }  
-.btnDel { background-color: #FF8C00; } 
-.btnClear { background-color: #DC143C; }
-.prediction { font-weight: bold; margin-bottom: 10px; }
-.red { color: red; }
-.green { color: green; }
-.yellow { color: gold; }
-.totalMoney { font-weight: bold; margin-top: 5px; }
+  body{ font-family: 'Segoe UI', sans-serif; padding:0; margin:0; background:#f0f2f5; color: #333; }
+  .sticky-header { position: sticky; top: 0; z-index: 1000; background: #fff; padding: 8px; border-bottom: 2px solid #ddd; }
+  .scroll-content { padding: 8px; }
+  
+  .mode-selector { display: flex; gap: 4px; margin-bottom: 6px; }
+  .mode-btn { flex: 1; padding: 10px 0; border-radius: 6px; border: 2px solid #1a237e; background: #fff; color: #1a237e; font-weight: 900; cursor: pointer; font-size: 13px; }
+  .mode-btn.active { background: #1a237e; color: #fff; }
+
+  .prediction-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
+  
+  .pred-box-small { padding: 6px 4px; border-radius: 8px; text-align: center; color: #fff; background: #9e9e9e; min-height: 45px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 2px solid transparent; transition: 0.3s; }
+  .pred-box-small .label { font-size: 9px; font-weight: bold; text-transform: uppercase; margin-bottom: 1px; opacity: 0.9; }
+  .pred-box-small .val { font-size: 14px; font-weight: 900; }
+  
+  .comb-box { padding: 8px 4px; border-radius: 8px; text-align: center; color: #1a237e; border: 2px solid #1a237e; background: #fff; min-height: 55px; display: flex; flex-direction: column; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.3s; }
+  .comb-box .label { font-size: 9px; font-weight: bold; text-transform: uppercase; margin-bottom: 2px; color: #666; }
+  .comb-box .val { font-size: 18px; font-weight: 900; letter-spacing: 0.5px; display: flex; justify-content: center; align-items: center; gap: 2px; }
+
+  /* HIỆU ỨNG NHẤP NHÁY CHUNG CHO KẾT HỢP */
+  @keyframes blink-yellow {
+    0% { background-color: #fff; }
+    50% { background-color: #ffeb3b; }
+    100% { background-color: #fff; }
+  }
+  .lvl-1 { animation: blink-yellow 1.2s infinite; border-color: #fbc02d; }
+  .lvl-2 { animation: blink-yellow 0.7s infinite; border-color: #fbc02d; }
+  .lvl-3 { animation: blink-yellow 0.3s infinite; border-color: #fbc02d; font-weight: bold; border-width: 3px; }
+
+  /* HIỆU ỨNG NHẤP NHÁY CHO 3 Ô TX, CL, GÓC KHI SAI TỪ 4 VÁN (LLLL) */
+  @keyframes border-blink {
+    0% { border-color: transparent; box-shadow: 0 0 0 0 #ffeb3b; }
+    50% { border-color: #ffeb3b; box-shadow: 0 0 10px 4px #ffeb3b; }
+    100% { border-color: transparent; box-shadow: 0 0 0 0 #ffeb3b; }
+  }
+  .pred-box-small.blink-4 { animation: border-blink 0.5s infinite; border-width: 2px; border-style: solid; }
+
+  .t-stats-container { background: #fff; padding: 6px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 6px; }
+  .t-row { display: flex; align-items: center; margin-bottom: 4px; border-bottom: 1px dashed #eee; padding-bottom: 2px; }
+  .t-row:last-child { border-bottom: none; }
+  .t-label { min-width: 38px; font-size: 12px; font-weight: 900; color: #666; }
+  .t-log-wrapper { overflow-x: auto; white-space: nowrap; flex: 1; scrollbar-width: none; }
+  .t-log-wrapper::-webkit-scrollbar { display: none; }
+  .t-log { font-size: 14px; font-weight: 900; letter-spacing: 1px; }
+  .w-text { color: #4caf50; } 
+  .l-text { color: #f44336; } 
+
+  .topBtns { display:grid; grid-template-columns: repeat(4, 1fr) 1.2fr 1.2fr; gap:6px; margin-top: 6px; }
+  .bigBtn { height:45px; border-radius:8px; border:none; color:#fff; font-weight:700; font-size:20px; cursor:pointer; }
+  
+  .section-title { background: #1a237e; color: #fff; padding: 6px 10px; font-size: 12px; font-weight: bold; border-radius: 5px 5px 0 0; }
+  .table-container { overflow-x: auto; width: 100%; border: 1px solid #ddd; background:#fff; margin-bottom: 10px; }
+  td { width:24px; height:24px; text-align:center; border:1px solid #f0f0f0; font-weight:700; font-size:12px; }
+  .dot { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; margin: auto; color: #fff; }
+  
+  .pp-card { border: 1px solid #ddd; background:#fff; margin-bottom:8px; padding:8px; border-radius:10px; }
+  .pp-card.is-top { border: 2px solid #ff9800; background: #fffdf0; }
 </style>
 </head>
 <body>
 
-<div>
-  <button class="btn1" onclick="addNumber(1)">1</button>
-  <button class="btn2" onclick="addNumber(2)">2</button>
-  <button class="btn3" onclick="addNumber(3)">3</button>
-  <button class="btn4" onclick="addNumber(4)">4</button>
-  <button class="btnDel" onclick="deleteLast()">Xóa 1</button>
-  <button class="btnClear" onclick="clearAll()">Xóa bàn</button>
+<div class="sticky-header">
+  <div class="mode-selector">
+    <button id="m_TaiXiu" class="mode-btn active" onclick="switchView('TaiXiu')">TX</button>
+    <button id="m_ChanLe" class="mode-btn" onclick="switchView('ChanLe')">CL</button>
+    <button id="m_Goc" class="mode-btn" onclick="switchView('Goc')">GÓC</button>
+  </div>
+
+  <div class="prediction-container">
+    <div class="prediction-grid">
+      <div id="box_TaiXiu" class="pred-box-small"><div class="label">TÀI XỈU</div><div class="val">...</div></div>
+      <div id="box_ChanLe" class="pred-box-small"><div class="label">CHẴN LẺ</div><div class="val">...</div></div>
+      <div id="box_Goc" class="pred-box-small"><div class="label">GÓC</div><div class="val">...</div></div>
+    </div>
+    <div class="prediction-grid">
+      <div id="comb_TX_CL" class="comb-box"><div class="label">TX-CL</div><div class="val">-</div></div>
+      <div id="comb_TX_Goc" class="comb-box"><div class="label">TX-GÓC</div><div class="val">-</div></div>
+      <div id="comb_CL_Goc" class="comb-box"><div class="label">CL-GÓC</div><div class="val">-</div></div>
+    </div>
+  </div>
+
+  <div class="t-stats-container">
+    <div class="t-row"><div class="t-label">TX:</div><div class="t-log-wrapper" id="wrap_TaiXiu"><div id="log_TaiXiu" class="t-log"></div></div></div>
+    <div class="t-row"><div class="t-label">CL:</div><div class="t-log-wrapper" id="wrap_ChanLe"><div id="log_ChanLe" class="t-log"></div></div></div>
+    <div class="t-row"><div class="t-label">GÓC:</div><div class="t-log-wrapper" id="wrap_Goc"><div id="log_Goc" class="t-log"></div></div></div>
+    <div class="t-row"><div class="t-label">T1:</div><div class="t-log-wrapper" id="wrap_T1"><div id="log_T1" class="t-log"></div></div></div>
+    <div class="t-row"><div class="t-label">T2:</div><div class="t-log-wrapper" id="wrap_T2"><div id="log_T2" class="t-log"></div></div></div>
+    <div class="t-row"><div class="t-label">T3:</div><div class="t-log-wrapper" id="wrap_T3"><div id="log_T3" class="t-log"></div></div></div>
+  </div>
+
+  <div class="topBtns">
+    <button onclick="handleInput(1)" class="bigBtn" style="background:#4caf50;">1</button>
+    <button onclick="handleInput(2)" class="bigBtn" style="background:#2196f3;">2</button>
+    <button onclick="handleInput(3)" class="bigBtn" style="background:#ff9800;">3</button>
+    <button onclick="handleInput(4)" class="bigBtn" style="background:#f44336;">4</button>
+    <button onclick="undo()" class="bigBtn" style="background:#607d8b; font-size:12px">XÓA</button>
+    <button onclick="clearAll()" class="bigBtn" style="background:#e53935; font-size:12px">MỚI</button>
+  </div>
 </div>
 
-<select id="ppSelect" onchange="setPP()">
-  <option value="">-- Chọn PP --</option>
-  <option value="BPB">BPB</option>
-  <option value="PPB">PPB</option>
-  <option value="BPBBPP">BPBBPP</option>
-  <option value="BPPBBBPPPP">BPPBBBPPPP</option>
-</select>
-
-<div class="prediction" id="predictionLine"></div>
-
-<h3>Bảng chính</h3>
-<table id="mainTable"></table>
-
-<h3>Bảng Tài/Xỉu</h3>
-<table id="txTable"></table>
-<div class="totalMoney">Tổng tiền: <span id="totalTX">0</span></div>
-
-<h3>Bảng Chẵn/Lẻ</h3>
-<table id="clTable"></table>
-<div class="totalMoney">Tổng tiền: <span id="totalCL">0</span></div>
-
-<h3>Bảng Góc</h3>
-<table id="gocTable"></table>
-<div class="totalMoney">Tổng tiền: <span id="totalGOC">0</span></div>
+<div class="scroll-content">
+  <div class="section-title">ROAD: <span id="tableTitle">TaiXiu</span></div>
+  <div class="table-container" id="containerMain"><table id="mainTable"></table></div>
+  <div id="multiPPContainer"></div>
+</div>
 
 <script>
-const rows=3, cols=100;
-const mainTable=document.getElementById('mainTable');
-const txTable=document.getElementById('txTable');
-const clTable=document.getElementById('clTable');
-const gocTable=document.getElementById('gocTable');
-const predictionLine=document.getElementById('predictionLine');
-const totalTX=document.getElementById('totalTX');
-const totalCL=document.getElementById('totalCL');
-const totalGOC=document.getElementById('totalGOC');
+const rows = 6;
+let rawHistory = [], currentView = 'TaiXiu';
+let modeLogs = { TaiXiu: [], ChanLe: [], Goc: [] };
+let combinedLogs = { T1: [], T2: [], T3: [] };
+let lastModePreds = { TaiXiu: null, ChanLe: null, Goc: null };
+let lastCombinedPreds = { T1: null, T2: null, T3: null };
 
-let ppString="", TX_PP=[], CL_PP=[], GOC_PP=[];
-let currentIndex=0, inputHistory=[];
+const MAP12 = {
+  "TC":"2-3-4", "XL":"1-2-3", "TL":"1-3-4", "XC":"1-2-4",
+  "T14":"1-3-4", "T23":"2-3-4", "X14":"1-2-4", "X23":"1-2-3",
+  "C14":"1-2-4", "C23":"2-3-4", "L14":"1-3-4", "L23":"1-2-3"
+};
 
-function createTable(table){
-  table.innerHTML="";
-  for(let r=0;r<rows;r++){
-    let tr=document.createElement('tr');
-    for(let c=0;c<cols;c++){ tr.appendChild(document.createElement('td')); }
-    table.appendChild(tr);
-  }
-  // Dòng trống
-  let trBlank=document.createElement('tr');
-  for(let c=0;c<cols;c++){ let td=document.createElement('td'); td.style.border='none'; trBlank.appendChild(td);}
-  table.appendChild(trBlank);
-  // Dòng tiền
-  let trMoney=document.createElement('tr');
-  for(let c=0;c<cols;c++){ trMoney.appendChild(document.createElement('td')); }
-  table.appendChild(trMoney);
+const configs = {
+  'TaiXiu': { map: {1:'P', 2:'P', 3:'B', 4:'B'}, colorP: '#2196F3', colorB: '#f44336', labelP:'X', labelB:'T' },
+  'ChanLe': { map: {1:'P', 3:'P', 2:'B', 4:'B'}, colorP: '#2196F3', colorB: '#f44336', labelP:'L', labelB:'C' },
+  'Goc': { map: {1:'P', 4:'P', 2:'B', 3:'B'}, colorP: '#2196F3', colorB: '#f44336', labelP:'14', labelB:'23' }
+};
+
+const buttonColors = {
+  '1': '#4caf50',
+  '2': '#2196f3',
+  '3': '#ff9800',
+  '4': '#f44336'
+};
+
+let stats = { TaiXiu: { topPP: [] }, ChanLe: { topPP: [] }, Goc: { topPP: [] } };
+
+function evaluateRule(prev2, last1) {
+  if (!prev2 || !last1) return null;
+  if (prev2 === 'B' && last1 === 'P') return 'B'; // tx -> t
+  if (prev2 === 'P' && last1 === 'B') return 'P'; // xt -> x
+  if (prev2 === 'B' && last1 === 'B') return 'B'; // tt -> t
+  if (prev2 === 'P' && last1 === 'P') return 'P'; // xx -> x
+  return null;
 }
 
-[mainTable,txTable,clTable,gocTable].forEach(createTable);
-
-function setPP(){
-  const pp=document.getElementById('ppSelect').value;
-  ppString=pp; inputHistory=[]; currentIndex=0; clearTables();
-  switch(pp){
-    case "BPB": TX_PP=['T','X','T']; CL_PP=['C','L','C']; GOC_PP=['23','14','23']; break;
-    case "PPB": TX_PP=['X','X','T']; CL_PP=['L','L','C']; GOC_PP=['14','14','23']; break;
-    case "BPBBPP": TX_PP=['T','X','T','T','X','X']; CL_PP=['C','L','C','C','L','L']; GOC_PP=['23','14','23','23','14','14']; break;
-    case "BPPBBBPPPP": TX_PP=['T','X','X','T','T','T','X','X','X','X']; CL_PP=['C','L','L','C','C','C','L','L','L','L']; GOC_PP=['23','14','14','23','23','23','14','14','14','14']; break;
-    default: TX_PP=[]; CL_PP=[]; GOC_PP=[];
-  }
-  updatePrediction();
+function formatCombVal(valStr) {
+  if (!valStr || valStr === "-") return "-";
+  return valStr.split('-').map(n => {
+    let bg = buttonColors[n] || '#1a237e';
+    return `<span style="background:${bg}; color:#fff; padding:2px 8px; border-radius:4px; display:inline-block; font-size:16px;">${n}</span>`;
+  }).join('<span style="color:#666; margin:0 2px;">-</span>');
 }
 
-function addNumber(num){
-  if(currentIndex>=rows*cols) return;
-  const row=currentIndex%rows;
-  const col=Math.floor(currentIndex/rows);
-  mainTable.rows[row].cells[col].textContent=num;
-  inputHistory.push(num);
-  updateRef(row,col,num);
-  currentIndex++;
-  updatePrediction();
-  updateMoney();
+function handleInput(num) {
+  if (lastModePreds.TaiXiu) checkModeWL('TaiXiu', num);
+  if (lastModePreds.ChanLe) checkModeWL('ChanLe', num);
+  if (lastModePreds.Goc) checkModeWL('Goc', num);
+
+  if (lastCombinedPreds.T1) checkWL('T1', num);
+  if (lastCombinedPreds.T2) checkWL('T2', num);
+  if (lastCombinedPreds.T3) checkWL('T3', num);
+
+  rawHistory.push(num);
+  runScanAll();
+  refreshUI();
+  updateLastPreds();
+  saveData();
 }
 
-function updateRef(row,col,num){
-  const idx=currentIndex%TX_PP.length;
-  const tx=matchTX(num,TX_PP[idx])?'✓':'✗';
-  txTable.rows[row].cells[col].textContent=tx;
-  txTable.rows[row].cells[col].className=(tx==='✓')?'correct':'wrong';
-  const cl=matchCL(num,CL_PP[idx])?'✓':'✗';
-  clTable.rows[row].cells[col].textContent=cl;
-  clTable.rows[row].cells[col].className=(cl==='✓')?'correct':'wrong';
-  const goc=matchGOC(num,GOC_PP[idx])?'✓':'✗';
-  gocTable.rows[row].cells[col].textContent=goc;
-  gocTable.rows[row].cells[col].className=(goc==='✓')?'correct':'wrong';
+function checkModeWL(mode, resultNum) {
+  const predLabel = lastModePreds[mode];
+  if (!predLabel) return;
+  const conf = configs[mode];
+  const actualVal = conf.map[resultNum];
+  const predVal = (predLabel === conf.labelP) ? 'P' : 'B';
+  const isWin = (predVal === actualVal);
+  modeLogs[mode].push(isWin ? 'W' : 'L');
 }
 
-function matchTX(num,char){ return (char==='T')?num>=3:(char==='X')?num<=2:false; }
-function matchCL(num,char){ return (char==='C')?num%2===0:(char==='L')?num%2!==0:false; }
-function matchGOC(num,char){ return (char==='14')?num===1||num===4:(char==='23')?num===2||num===3:false; }
-
-function updatePrediction(){
-  if(TX_PP.length===0 || inputHistory.length===0){predictionLine.innerHTML=''; return;}
-  const idx=currentIndex%TX_PP.length;
-  const len=inputHistory.length;
-  let txCorrect=0, clCorrect=0, gocCorrect=0;
-  for(let i=0;i<inputHistory.length;i++){
-    const val=inputHistory[i], txIdx=i%TX_PP.length;
-    if(matchTX(val,TX_PP[txIdx])) txCorrect++;
-    if(matchCL(val,CL_PP[txIdx])) clCorrect++;
-    if(matchGOC(val,GOC_PP[txIdx])) gocCorrect++;
-  }
-  predictionLine.innerHTML=
-    `<span class="${getColor(TX_PP[idx])}">${TX_PP[idx]} ${Math.round(txCorrect/len*100)}%</span> | `+
-    `<span class="${getColor(CL_PP[idx])}">${CL_PP[idx]} ${Math.round(clCorrect/len*100)}%</span> | `+
-    `<span class="${getColor(GOC_PP[idx])}">${GOC_PP[idx]} ${Math.round(gocCorrect/len*100)}%</span>`;
+function checkWL(key, resultNum) {
+  const predSet = lastCombinedPreds[key];
+  if (!predSet || predSet === "-") return;
+  const isWin = predSet.includes(resultNum.toString());
+  combinedLogs[key].push(isWin ? 'W' : 'L');
 }
 
-function getColor(char){
-  if(char==='T'||char==='C') return 'red';
-  else if(char==='X'||char==='L'||char==='14') return 'green';
-  else if(char==='23') return 'yellow';
-  else return '';
-}
-
-function deleteLast(){ 
-  if(currentIndex<=0) return; 
-  currentIndex--; 
-  const row=currentIndex%rows, col=Math.floor(currentIndex/rows); 
-  mainTable.rows[row].cells[col].textContent=''; 
-  [txTable,clTable,gocTable].forEach(table=>{ const td=table.rows[row].cells[col]; td.textContent=''; td.className='';});
-  inputHistory.pop(); 
-  updatePrediction(); 
-  updateMoney();
-}
-
-function clearAll(){ currentIndex=0; inputHistory=[]; clearTables(); updatePrediction(); updateMoney();}
-
-function clearTables(){ [mainTable,txTable,clTable,gocTable].forEach(table=>{ table.querySelectorAll('tr').forEach(tr=>{ tr.querySelectorAll('td').forEach(td=>td.textContent=''); }); });}
-
-function updateMoney(){
-  const tables=[
-    {table:txTable,total:totalTX},
-    {table:clTable,total:totalCL},
-    {table:gocTable,total:totalGOC}
-  ];
-  tables.forEach(obj=>{
-    const table=obj.table;
-    const moneyRow=table.rows[rows+1];
-    let total=0;
-    for(let c=0;c<cols;c++){
-      const prev=[table.rows[0].cells[c].textContent, table.rows[1].cells[c].textContent, table.rows[2].cells[c].textContent];
-      if(prev.includes('')){ moneyRow.cells[c].textContent=''; continue; } // chưa đủ dữ liệu
-      if(prev.every(x=>'✓'===x) || prev.every(x=>'✗'===x)){ moneyRow.cells[c].textContent=''; continue; }
-      const countX=prev.filter(x=>'✓'===x).length;
-      const countV=prev.filter(x=>'✗'===x).length;
-      const target=(countX<countV)?'✓':'✗';
-      moneyRow.cells[c].textContent=prev.includes(target)?1:-7;
-      total+=parseInt(moneyRow.cells[c].textContent)||0;
+function updateLastPreds() {
+  let p = { TaiXiu: '', ChanLe: '', Goc: '' };
+  Object.keys(configs).forEach(mode => {
+    const conf = configs[mode];
+    const eff = rawHistory.map(n => conf.map[n]);
+    if (eff.length >= 2) {
+      const predVal = evaluateRule(eff[eff.length - 2], eff[eff.length - 1]);
+      if (predVal) {
+        p[mode] = (predVal === 'P') ? conf.labelP : conf.labelB;
+      }
     }
-    obj.total.textContent=total;
+  });
+
+  lastModePreds.TaiXiu = p.TaiXiu || null;
+  lastModePreds.ChanLe = p.ChanLe || null;
+  lastModePreds.Goc = p.Goc || null;
+
+  lastCombinedPreds.T1 = MAP12[p.TaiXiu + p.ChanLe] || null;
+  lastCombinedPreds.T2 = MAP12[p.TaiXiu + p.Goc] || null;
+  lastCombinedPreds.T3 = MAP12[p.ChanLe + p.Goc] || null;
+}
+
+function runScanAll() {
+  Object.keys(configs).forEach(mode => {
+    const conf = configs[mode];
+    const eff = rawHistory.map(n => conf.map[n]);
+    if (eff.length < 2) { stats[mode].topPP = []; return; }
+    
+    let resArr = [];
+    for (let i = 0; i < eff.length; i++) {
+      if (i < 2) {
+        resArr.push('-');
+      } else {
+        let pred = evaluateRule(eff[i-2], eff[i-1]);
+        resArr.push(pred === eff[i] ? '✓' : '✗');
+      }
+    }
+    
+    let validRes = resArr.filter(r => r === '✓' || r === '✗');
+    let rate = validRes.length > 0 ? Math.round((validRes.filter(r => r === '✓').length / validRes.length) * 100) : 0;
+    let money = 0;
+    for(let i = 0; i < Math.floor(validRes.length / 4); i++) {
+      let col = validRes.slice(i * 4, (i + 1) * 4);
+      if(col.length === 4 && col.every(v => v === '✗')) money -= 7; else if(col.length === 4) money += 1;
+    }
+    
+    let nextVal = eff.length >= 2 ? evaluateRule(eff[eff.length-2], eff[eff.length-1]) : null;
+
+    stats[mode].topPP = [{
+      name: 'PP CHUẨN (TX/XT/TT/XX)',
+      resArr: resArr,
+      rate: rate,
+      money: money,
+      nextVal: nextVal,
+      lastMiss: resArr[resArr.length-1] === '✗'
+    }];
   });
 }
-</script>
 
+function refreshUI() {
+  let curP = { TaiXiu: '', ChanLe: '', Goc: '' };
+  Object.keys(configs).forEach(mode => {
+    const box = document.getElementById('box_' + mode);
+    const conf = configs[mode];
+    const eff = rawHistory.map(n => conf.map[n]);
+    const top = stats[mode].topPP;
+    if (eff.length >= 2 && top.length > 0) {
+      const best = top[0];
+      if (best.nextVal) {
+        curP[mode] = (best.nextVal === 'P') ? conf.labelP : conf.labelB;
+        box.style.background = (best.nextVal === 'P') ? conf.colorP : conf.colorB;
+        box.querySelector('.val').textContent = `${curP[mode]} ${best.rate}%`;
+      }
+    } else {
+      box.style.background = '#9e9e9e';
+      box.querySelector('.val').textContent = `CHỜ (${Math.max(0, 2 - eff.length)})`;
+    }
+    
+    // Kiểm tra hiệu ứng nhấp nháy 4 ván sai liên tiếp (LLLL) cho từng ô dự đoán
+    updateModeBlink(box, mode);
+  });
+
+  const comb_T1 = document.getElementById('comb_TX_CL');
+  const comb_T2 = document.getElementById('comb_TX_Goc');
+  const comb_T3 = document.getElementById('comb_CL_Goc');
+
+  comb_T1.querySelector('.val').innerHTML = formatCombVal(MAP12[curP.TaiXiu + curP.ChanLe]);
+  comb_T2.querySelector('.val').innerHTML = formatCombVal(MAP12[curP.TaiXiu + curP.Goc]);
+  comb_T3.querySelector('.val').innerHTML = formatCombVal(MAP12[curP.ChanLe + curP.Goc]);
+
+  updateBlink(comb_T1, 'T1');
+  updateBlink(comb_T2, 'T2');
+  updateBlink(comb_T3, 'T3');
+
+  ['TaiXiu','ChanLe','Goc'].forEach(key => {
+    const el = document.getElementById('log_' + key);
+    el.innerHTML = modeLogs[key].map(x => `<span class="${x === 'W' ? 'w-text' : 'l-text'}">${x}</span>`).join('');
+    document.getElementById('wrap_' + key).scrollLeft = 9999;
+  });
+
+  ['T1','T2','T3'].forEach(key => {
+    const el = document.getElementById('log_' + key);
+    el.innerHTML = combinedLogs[key].map(x => `<span class="${x === 'W' ? 'w-text' : 'l-text'}">${x}</span>`).join('');
+    document.getElementById('wrap_' + key).scrollLeft = 9999;
+  });
+
+  renderMainTable();
+  renderTopCards();
+}
+
+function updateModeBlink(element, mode) {
+  const log = modeLogs[mode];
+  element.classList.remove('blink-4');
+  if (log.length === 0) return;
+  
+  let missCount = 0;
+  for (let i = log.length - 1; i >= 0; i--) {
+    if (log[i] === 'L') missCount++;
+    else break;
+  }
+
+  if (missCount >= 4) {
+    element.classList.add('blink-4');
+  }
+}
+
+function updateBlink(element, key) {
+  const log = combinedLogs[key];
+  element.classList.remove('lvl-1', 'lvl-2', 'lvl-3');
+  if (log.length === 0) return;
+  
+  let missCount = 0;
+  for (let i = log.length - 1; i >= 0; i--) {
+    if (log[i] === 'L') missCount++;
+    else break;
+  }
+
+  if (missCount === 1) element.classList.add('lvl-1');
+  else if (missCount === 2) element.classList.add('lvl-2');
+  else if (missCount >= 3) element.classList.add('lvl-3');
+}
+
+function renderMainTable() {
+  const conf = configs[currentView];
+  const effFull = rawHistory.map(n => ({ num: n, val: conf.map[n] }));
+  const mainT = document.getElementById('mainTable'); mainT.innerHTML = '';
+  document.getElementById('tableTitle').textContent = currentView;
+  let grid = Array.from({ length: rows }, () => Array(150).fill(null));
+  let curR = 0, curC = 0;
+  effFull.forEach((item, idx) => {
+    if (idx > 0 && item.val !== effFull[idx - 1].val) { curC++; curR = 0; }
+    else if (idx > 0) { if (curR + 1 < rows && grid[curR+1][curC] === null) curR++; else curC++; }
+    if (curC < 150) grid[curR][curC] = item;
+  });
+  for (let r = 0; r < rows; r++) {
+    let tr = document.createElement('tr');
+    for (let c = 0; c <= Math.max(curC, 15); c++) {
+      let td = document.createElement('td');
+      if (grid[r][c]) {
+        let s = document.createElement('span'); s.className = 'dot'; s.textContent = grid[r][c].num;
+        s.style.backgroundColor = (grid[r][c].val === 'P') ? conf.colorP : conf.colorB;
+        td.appendChild(s);
+      }
+      tr.appendChild(td);
+    }
+    mainT.appendChild(tr);
+  }
+  document.getElementById('containerMain').scrollLeft = 9999;
+}
+
+function renderTopCards() {
+  const container = document.getElementById('multiPPContainer'); container.innerHTML = '';
+  const top = stats[currentView].topPP;
+  const conf = configs[currentView];
+  if (top.length === 0) return;
+  const item = top[0];
+
+  const card = document.createElement('div');
+  card.className = 'pp-card is-top';
+  card.innerHTML = `<div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; margin-bottom:4px">
+    <span>${item.name} (${item.money})</span>
+    <span style="background:${item.nextVal==='P'?conf.colorP:conf.colorB}; color:#fff; padding:2px 6px; border-radius:4px">${item.nextVal==='P'?conf.labelP:conf.labelB} ${item.rate}%</span>
+  </div>`;
+  
+  const tableWrap = document.createElement('div'); tableWrap.className = 'table-container';
+  tableWrap.style.marginBottom = "0";
+  const table = document.createElement('table');
+
+  const validRes = item.resArr.map((res, i) => ({ val: res })).filter(x => x.val === '✓' || x.val === '✗');
+  
+  let grid = Array.from({ length: rows }, () => Array(150).fill(null));
+  let curR = 0, curC = 0;
+  validRes.forEach((resObj, idx) => {
+    if (idx > 0 && resObj.val !== validRes[idx - 1].val) { curC++; curR = 0; }
+    else if (idx > 0) { if (curR + 1 < rows && grid[curR+1][curC] === null) curR++; else curC++; }
+    if (curC < 150) grid[curR][curC] = resObj;
+  });
+
+  for (let r = 0; r < rows; r++) {
+    let tr = document.createElement('tr');
+    for (let c = 0; c <= Math.max(curC, 15); c++) {
+      let td = document.createElement('td');
+      if (grid[r][c]) {
+        let resVal = grid[r][c].val;
+        let s = document.createElement('span'); 
+        s.className = 'dot'; 
+        s.textContent = resVal;
+        s.style.backgroundColor = (resVal === '✓') ? '#4caf50' : '#f44336';
+        td.appendChild(s);
+      }
+      tr.appendChild(td);
+    }
+    table.appendChild(tr);
+  }
+
+  tableWrap.appendChild(table); 
+  card.appendChild(tableWrap); 
+  container.appendChild(card);
+  tableWrap.scrollLeft = 9999;
+}
+
+function switchView(mode) {
+  currentView = mode;
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.id === 'm_'+mode));
+  refreshUI();
+}
+
+function undo() { 
+  if (rawHistory.length === 0) return;
+  rawHistory.pop(); 
+  modeLogs.TaiXiu.pop(); modeLogs.ChanLe.pop(); modeLogs.Goc.pop();
+  combinedLogs.T1.pop(); combinedLogs.T2.pop(); combinedLogs.T3.pop(); 
+  runScanAll(); refreshUI(); saveData();
+}
+
+function clearAll() { 
+  if(confirm("Xóa bàn làm mới hết?")) { 
+    rawHistory=[]; 
+    modeLogs = { TaiXiu: [], ChanLe: [], Goc: [] };
+    combinedLogs = { T1: [], T2: [], T3: [] };
+    lastModePreds = { TaiXiu: null, ChanLe: null, Goc: null };
+    lastCombinedPreds = { T1: null, T2: null, T3: null };
+    localStorage.clear();
+    runScanAll(); refreshUI(); 
+  } 
+}
+
+function saveData() {
+  localStorage.setItem('fantan_6g_history', JSON.stringify(rawHistory));
+  localStorage.setItem('fantan_6g_modelogs', JSON.stringify(modeLogs));
+  localStorage.setItem('fantan_6g_logs', JSON.stringify(combinedLogs));
+}
+
+function loadData() {
+  const h = localStorage.getItem('fantan_6g_history');
+  const ml = localStorage.getItem('fantan_6g_modelogs');
+  const l = localStorage.getItem('fantan_6g_logs');
+  if (h) rawHistory = JSON.parse(h);
+  if (ml) modeLogs = JSON.parse(ml);
+  if (l) combinedLogs = JSON.parse(l);
+}
+
+window.onload = () => { 
+  loadData();
+  runScanAll();
+  refreshUI();
+  updateLastPreds();
+};
+</script>
 </body>
 </html>
